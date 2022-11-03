@@ -10,11 +10,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-            const data = request?.cookies['access-token'];
-            if (!data) {
-                return null;
-            }
-            return data;
+          const data = request?.cookies['access-token'];
+          if (!data) {
+            return null;
+          }
+          return data;
         },
       ]),
       ignoreExpiration: false,
@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: any) {
     const user = await this.usersService.findOne(payload.id);
     if (!user) {
-        throw new NotFoundException('User not found');
+      throw new NotFoundException('User not found');
     }
     return user;
   }

@@ -10,59 +10,51 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-    private accessToken: string;
+  private accessToken: string;
 
-    constructor(
-        private usersService: UsersService,
-        private jwtService: JwtService,
-        @InjectRepository(User) private repo: Repository<User>
-    ) {}
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+    @InjectRepository(User) private repo: Repository<User>,
+  ) {}
 
-    createAccessToken(user: User) {
-        const payload = { id: user.id, email: user.email, admin: user.admin };
-        this.accessToken = this.jwtService.sign(
-            payload,
-            { expiresIn: '5d' }
-        );   
+  createAccessToken(user: User) {
+    const payload = { id: user.id, email: user.email, admin: user.admin };
+    this.accessToken = this.jwtService.sign(payload, { expiresIn: '5d' });
 
-        return this.accessToken;
+    return this.accessToken;
+  }
+
+  createRefreshToken(user: User) {
+    const payload = { id: user.id, email: user.email, admin: user.admin };
+    if (!user.refreshToken) {
+      user.refreshToken = this.jwtService.sign(payload, { expiresIn: '10y' });
+      this.repo.save(user);
     }
+    return user.refreshToken;
+  }
 
-    createRefreshToken(user: User) {
-        const payload = { id: user.id, email: user.email, admin: user.admin };
-        if (!user.refreshToken) {
-            user.refreshToken = this.jwtService.sign(
-                payload,
-                { expiresIn: '10y' }
-            );
-            this.repo.save(user);
-        }
-        return user.refreshToken;
-    }
+  async destroyAccessToken() {}
 
-    async destroyAccessToken() {
-        
+  async signup(email: string, password: string) {
+    const [user] = await this.usersService.find(email);
+    if (user) {
+      throw new BadRequestException('Email in use');
     }
+    password = await bcrypt.hash(password, 10);
+    const newUser = this.repo.create({ email, password });
+    return this.repo.save(newUser);
+  }
 
-    async signup(email: string, password: string) {
-        const [user] = await this.usersService.find(email);
-        if (user) {
-            throw new BadRequestException('Email in use');
-        }
-        password = await bcrypt.hash(password, 10);
-        const newUser = this.repo.create({ email, password });
-        return this.repo.save(newUser);
+  async signin(email: string, password: string) {
+    const [user] = await this.usersService.find(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
-
-    async signin(email: string, password: string) {
-        const [user] = await this.usersService.find(email);
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            throw new BadRequestException('Invalid password');
-        }
-        return user;
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw new BadRequestException('Invalid password');
     }
+    return user;
+  }
 }

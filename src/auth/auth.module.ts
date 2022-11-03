@@ -12,7 +12,7 @@ import { PassportModule } from '@nestjs/passport';
     UsersModule,
     PassportModule,
     JwtModule.register({
-      secret: 'my-secret-key'
+      secret: 'my-secret-key',
     }),
   ],
   controllers: [AuthController],

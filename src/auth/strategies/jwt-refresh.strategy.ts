@@ -5,16 +5,19 @@ import { Request } from 'express';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(private usersService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
-            const data = request?.cookies['refresh-token'];
-            if (!data) {
-                return null;
-            }
-            return data;
+          const data = request?.cookies['refresh-token'];
+          if (!data) {
+            return null;
+          }
+          return data;
         },
       ]),
       ignoreExpiration: false,
@@ -25,7 +28,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
   async validate(payload: any) {
     const user = await this.usersService.findOne(payload.id);
     if (!user) {
-        throw new NotFoundException('User not found');
+      throw new NotFoundException('User not found');
     }
     return user;
   }
