@@ -40,19 +40,6 @@ export class AuthService {
         return user.refreshToken;
     }
 
-    async createNewAccessToken(currentUser: User) {
-        try {
-            const payload = this.jwtService.verify(currentUser.refreshToken);
-            const user = await this.repo.findOne(payload.id);
-            if (!user) {
-                throw new NotFoundException('User not found');
-            }
-            return this.createAccessToken(user);
-        } catch (error) {
-            throw new BadRequestException('Invalid refresh token');
-        }
-    }
-
     async destroyAccessToken() {
         
     }

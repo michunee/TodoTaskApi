@@ -11,11 +11,10 @@ import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { AuthService } from './auth.service';
 import { User } from 'src/users/users.entity';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { UserDto } from 'src/users/dtos/user.dto';
 
 @Controller('auth')
 export class AuthController {
+    
     constructor(private authService: AuthService) {}
 
     @Post('signup')
@@ -47,7 +46,7 @@ export class AuthController {
     @UseGuards(AuthGuard('jwt-refresh'))
     @Get('refresh')
     async getNewAccessToken(@CurrentUser() user: User, @Response({passthrough: true}) res: any) {
-        const newAccessToken = await this.authService.createNewAccessToken(user);
+        const newAccessToken = this.authService.createAccessToken(user);
         res.cookie('access-token', newAccessToken, { httpOnly: true });
         return { newAccessToken };
     }
