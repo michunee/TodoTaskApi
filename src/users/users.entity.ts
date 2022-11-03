@@ -20,6 +20,9 @@ export class User {
     @Column({ default: false })
     admin: boolean;
 
+    @Column({ default: null })
+    refreshToken: string;
+
     @OneToMany(type => Task, task => task.user)
     tasks: Task[];
 }

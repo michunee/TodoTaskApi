@@ -20,9 +20,37 @@ export class AuthService {
 
     createAccessToken(user: User) {
         const payload = { id: user.id, email: user.email, admin: user.admin };
-        this.accessToken = this.jwtService.sign(payload);
+        this.accessToken = this.jwtService.sign(
+            payload,
+            { expiresIn: '5d' }
+        );   
 
         return this.accessToken;
+    }
+
+    createRefreshToken(user: User) {
+        const payload = { id: user.id, email: user.email, admin: user.admin };
+        if (!user.refreshToken) {
+            user.refreshToken = this.jwtService.sign(
+                payload,
+                { expiresIn: '10y' }
+            );
+            this.repo.save(user);
+        }
+        return user.refreshToken;
+    }
+
+    async createNewAccessToken(currentUser: User) {
+        try {
+            const payload = this.jwtService.verify(currentUser.refreshToken);
+            const user = await this.repo.findOne(payload.id);
+            if (!user) {
+                throw new NotFoundException('User not found');
+            }
+            return this.createAccessToken(user);
+        } catch (error) {
+            throw new BadRequestException('Invalid refresh token');
+        }
     }
 
     async destroyAccessToken() {
